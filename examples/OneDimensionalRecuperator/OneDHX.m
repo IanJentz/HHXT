@@ -162,9 +162,9 @@ end
 % model, face 1
 sld1 = HHXTProperties(model,'Face',1,'Stream',0,...
                        'PhaseFraction',(1-phi_core),...
-                 'ThermalConductivity',@k316,... % @ makes this a function, see the k316() function 
-                         'MassDensity',8030,...
-                        'SpecificHeat',502);
+                 'ThermalConductivity',@k316,...    % @ makes this a function, see the k316() function 
+                         'MassDensity',8030,...     %densitiy in kg/m3
+                        'SpecificHeat',502);        %heat capacity in J/kg-K
 
 % fluid properties can be constant or defined as a function of temp and
 % pressure
@@ -198,7 +198,7 @@ fldC = HHXTProperties(model,'Face',1,'Stream',1,...
                  'ThermalConductivity',c_k,...       %thermal conductivity in W/m-K
                          'MassDensity',c_rho,...     %densitiy in kg/m3
                         'SpecificHeat',c_cp,...      %heat capacity in J/kg-K
-                   'HydraulicDiameter',D_h,...    %hydraulic diameter in m
+                   'HydraulicDiameter',D_h,...      %hydraulic diameter in m
                            'Viscosity',c_mu,...      %viscosity in kg/m-s
                              'Nusselt',Nu_C,...
                               'fDarcy',fmatr);
@@ -211,7 +211,7 @@ fldH = HHXTProperties(model,'Face',1,'Stream',2,...
                  'ThermalConductivity',c_k,...       %thermal conductivity in W/m-K
                          'MassDensity',c_rho,...     %densitiy in kg/m3
                         'SpecificHeat',c_cp,...      %heat capacity in J/kg-K
-                   'HydraulicDiameter',D_h,...    %hydraulic diameter in m
+                   'HydraulicDiameter',D_h,...      %hydraulic diameter in m
                            'Viscosity',c_mu,...      %viscosity in kg/m-s
                              'Nusselt',Nu_H,...
                               'fDarcy',fmatr);
