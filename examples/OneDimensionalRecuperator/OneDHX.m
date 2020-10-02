@@ -9,13 +9,13 @@
 % defined by the Colebrook friction factor and the Dittus-Boelter
 % heat transfer relations.
 
-breakpoints = true; %will pause execution at points, press F5 to continue
+breakpoints = false; %will pause execution at points, press F5 to continue
 
 %model configuration
 %these varaibles provide an easy way of changin the behavior of the script
 flowDir = 'counter'; %'counter' or 'parallel', for changing the flow orientation ( cold side switches )
 
-propmode = 'const'; %'const','isobar', or 'real', for CO2 properties
+propmode = 'real'; %'const','isobar', or 'real', for CO2 properties
 flowBC = 'mdot'; %'DP', 'mdot', or 'mflux', for Pressure drop, mass flow, or mass flux Boundary Conditions
 fNumode = 'const'; %'const' or 'func', for Darcy friction factor and Nusselt number
 
@@ -88,7 +88,7 @@ end
 
 
 %% Problem Initialization
-% Construct the HHXT model object using the createHHXT() function.  Set the
+% Construct the HHXT model object using the |createHHXT()| function.  Set the
 % analyis to be a steady state problem using the AnalysisType property.
 % Set the solution options using the MatrixOptions property.  Set the
 % solver options using the SolverOptions property
@@ -114,11 +114,11 @@ model.SolverOptions.ReportStatistics = 'on'; % will write iterations and converg
 model.SolverOptions.MaxIterations = 50;
 model.SolverOptions.ResidualTolerance = 1e-6;
 model.SolverOptions.MinStep = 1;  % smaller steps (<1) can be taken but are not necessary
-model.SolverOptions.AbsoluteTolerance = 1e-2;
+model.SolverOptions.AbsoluteTolerance = 1e0;
 
 
 %% Geometry and Material Definitions
-% Define the geometry of the HX using the Geom_Rectangle() function.
+% Define the geometry of the HX using the |Geom_Rectangle()| function.
 
 Geom_Rectangle(model,L,W); %creates a rectangular geometry
 model.setThickness(H);  % set the 2D thickness (if not set the default will be 1 m thick!)
@@ -134,7 +134,7 @@ end
 
 
 %% Mesh the problem
-% Mesh the geometry using the generateMesh() function.  The HHXT model only
+% Mesh the geometry using the |generateMesh()| function.  The HHXT model only
 % works with linear elements only at this point.
 
 % generate a mesh of linear tets
@@ -152,10 +152,9 @@ end
 
 
 %% Material Region Definitions
-% Define the behavior of the HHXT model using the HHXTProperties()
+% Define the behavior of the HHXT model using the |HHXTProperties()|
 % function.  This sets the homogenized properties of the HX for each region
-% of the geometry.  In this case we only have a single region, Face 1. Then
-% apply the behaviors using HHXTMaterial(model,'BuildMaterialMap').
+% of the geometry.  In this case we only have a single region, Face 1.
 
 % define core solid materials
 % the core solid is stream 0 and we specify it on the only face in the
@@ -214,15 +213,10 @@ fldH = HHXTProperties(model,'Face',1,'Stream',2,...
                    'HydraulicDiameter',D_h,...      %hydraulic diameter in m
                            'Viscosity',c_mu,...      %viscosity in kg/m-s
                              'Nusselt',Nu_H,...
-                              'fDarcy',fmatr);
-                         
-% build material map
-disp('    ...building material map')
-HHXTMaterial(model,'BuildMaterialMap');
-
+                              'fDarcy',fmatr);                  
 
 %% Apply Initial Conditions
-% Apply initial conditions using the setInitialConditions() function.
+% Apply initial conditions using the |setInitialConditions()| function.
 
 % set initial conditions
 % these are just guesses so the solver can start from somewhere
@@ -234,7 +228,7 @@ setInitialConditions(model,u0);
 
 
 %% Define Boundary Conditions
-% Define boundary conditions using the applyStreamBoundaryCondition() function.  
+% Define boundary conditions using the |applyStreamBoundaryCondition()| function.  
 
 % The inlets and outlets depend on whether the problem is counterflow or
 % parrallel flow.  The hot side (stream 2) stays the same while the cold
@@ -294,7 +288,7 @@ switch flowBC
 end
 
 %% Solve the steady state problem
-% Solve the HHXT model using the solveHHXTpde() function.
+% Solve the HHXT model using the |solveHHXTpde()| function.
 
 disp('starting steady state solution...')    
 
@@ -316,7 +310,7 @@ keyboard %programatically inserts a breakpoint
 end
 
 %% Display Results
-% View the part of the results object.  The results.Tables provide an
+% View the part of the results object.  The |results.Tables| provide an
 % overview of the problem.
 
 % display results
@@ -342,7 +336,7 @@ disp('Number of Elements:')
 disp(length(results.Mesh.Elements))
 
 %% Plot Model Results
-% Plot the results of the model using the hhxt.PlotHHXT() class.
+% Plot the results of the model using the |hhxt.PlotHHXT()| class.
 
 % create plotting object using the PlotHHXT class
 PlotObj = hhxt.PlotHHXT(filename);
@@ -423,7 +417,7 @@ end
 % The microchannel heat transfer coefficient can be dependent on position,
 % time, Reynolds number, and Prandtl number.
 % Functional deifinitions must accept the following inputs (pos,time,Re,Pr)
-% Where pos is a structure containing arrays of coordinates pos.x and pos.y
+% Where pos is a structure containing arrays of coordinates pos [x;y]
 % And where time, Re, and Pr are arrays of time in sec,
 % Reynolds number, and Prandtl number.
 % Note the here the Re is the Reynolds magnitude, i.e. magnitude of the
@@ -465,7 +459,7 @@ end
 % Properties of the fluids, streams 1 & 2, can be dependent on position,
 % time, temperature, and pressure.  
 % Functional definitions must accept the inputs (pos,time,temp,press)
-% Where pos is a structure containing arrays of coordinates pos.x and pos.y.
+% Where pos is a structure containing arrays of coordinates pos [x;y].
 % And where time, temp, and press are arrays of time in sec,
 % temperature in C, and pressure in Pa.
 
@@ -510,7 +504,7 @@ end
 % Properties of the fluids, streams 1 & 2, can be dependent on position,
 % time, temperature, and pressure.  
 % Functional definitions must accept the inputs (pos,time,temp,press)
-% Where pos is a structure containing arrays of coordinates pos.x and pos.y.
+% Where pos is a structure containing arrays of coordinates pos [x;y].
 % And where time, temp, and press are arrays of time in sec,
 % temperature in C, and pressure in Pa.
 

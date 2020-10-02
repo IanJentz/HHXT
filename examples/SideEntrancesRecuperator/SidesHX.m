@@ -22,13 +22,16 @@ fNumode = 'const'; %'const' or 'func', for Darcy friction factor and Nusselt num
 basename = 'SideHX_Results';
 filename = [basename,'_solu']; % steady state results filename
 
+% this is an anoying warning that Matlab is throwing at the moment
+warning('off','MATLAB:subscripting:noSubscriptsSpecified') % turn it off
+
 %% HX geometry and condition variables
 % These variables define the geometry of the rectangular model, the
 % conditions imposed at the boundaries, the microchannel properties, and
 % the friction factor and Nusselt number of the microchannels.
 
 %geometry
-H_max = 0.01;  %mesh size, maximum size of an element in m^2
+H_max = 0.02;  %mesh size, maximum size of an element in m^2
 L = 0.678;      %length in m
 W = 85.78e-3;    %width in m
 H = 80.7e-3;    %height in m (although the model is 2D it has a finite thickness)
@@ -93,7 +96,7 @@ switch fNumode
 end
 
 %% Problem Initialization
-% Construct the HHXT model object using the createHHXT() function.  Set the
+% Construct the HHXT model object using the |createHHXT()| function.  Set the
 % analyis to be a steady state problem using the AnalysisType property.
 % Set the solution options using the MatrixOptions property.  Set the
 % solver options using the SolverOptions property
@@ -115,16 +118,16 @@ model.MatrixOptions = {...
     'FluidConduction','on','Advection','on'}; % with both conductive and advective heat transport within the fluid streams
 
 % the solver options are...
-model.SolverOptions.MaxIterations = 10;
+model.SolverOptions.MaxIterations = 20;
 model.SolverOptions.ResidualTolerance = 1e-6;
 model.SolverOptions.MinStep = 1;  % smaller steps (<1) can be taken but are not necessary
-model.SolverOptions.AbsoluteTolerance = 1e-2;
+model.SolverOptions.AbsoluteTolerance = 1e0;
 if verbose == true
     model.SolverOptions.ReportStatistics = 'on'; % will write iterations and convergence data to the command line
 end
 
 %% Geometry
-% Define the geometry of the HX using the Geom_SideHeaders() function.
+% Define the geometry of the HX using the |Geom_SideHeaders()| function.
 % This will result in a geometry with 3 Faces/Regions
 
 G = Geom_SideHeaders(model,L,W,W_head);
@@ -132,7 +135,7 @@ model.setThickness(H);  % set the 2D thickness (if not set the default will be 1
 
 if plotting == true % plot the geometry in a figure
 figure()
-pdegplot(model,'CellLabels','on','EdgeLabels','on','FaceLabels','on','FaceAlpha',0.5);
+pdegplot(model,'CellLabels','on','EdgeLabels','on','FaceLabels','on','FaceAlpha',0.5,'VertexLabels','on');
 end
 
 if breakpoints == true
@@ -141,14 +144,48 @@ keyboard %programatically inserts a breakpoint, comment this out if you don't wa
 end
 
 %% Mesh the problem
-% Mesh the geometry using the generateMesh() function.  The HHXT model only
+% Mesh the geometry using the |generateMesh()| function.  The HHXT model only
 % works with linear elements only at this point.
+%
+% Refine the mesh once in the side regions.  Then refine the mesh once
+% about vertices 1, 2, 3, and 6, and the edges 3, 5, 6, and 8.
+% Use the |refineHHXTmesh()| function.
 
 % generate a mesh of linear tets
 if verbose == true
 disp('    ...generating mesh')
 end
 generateMesh(model,'Hmax',H_max,'GeometricOrder','linear');
+
+% calling refineHHXTmesh with a single integer or row of integers
+% will refine the mesh within the region/face that is specified.
+model = refineHHXTmesh(model,[2,3]);    % refine triangles within Faces 2 & 3
+
+% to refine about the vertices 1, 2, 3, and 6, we have to look up the
+% triangles within radius r_pinball of each vertex, then pass these to
+% refineHHXTmesh() for refinement. 
+r_pinball = 1.5*H_max; % set the pinball/refinement radius to 1.5 that of the coarses mesh size
+elem_refine = [];
+for VertexID = [1,2,3,6]
+nodes = model.Mesh.findNodes('region','Vertex',VertexID);
+center = model.Mesh.Nodes(:,nodes);
+elem_pinball = model.Mesh.findElements('radius',center,r_pinball);
+elem_refine = [elem_refine;elem_pinball']; % need to be passed as a column 
+end
+
+% we will also add on the elements incorperated by edges 3, 5, 6, and 8.
+% To do so we have to first look up the nodes of each edge, then find the
+% elements that are attached to these nodes, as findElements() does not
+% accept 'Edge' as a valid 'region' input.
+for EdgeID = [3,5,6,8]
+nodes = model.Mesh.findNodes('region','Edge',EdgeID);
+elem_edge = model.Mesh.findElements('attached',nodes);
+elem_refine = [elem_refine;elem_edge']; % need to be passed as a column 
+end
+
+% calling refineHHXTmesh() with a column of integers will refine the mesh
+% in the elements specified in the column
+model = refineHHXTmesh(model,elem_refine);  % elements to refine, input as a column 
 
 if plotting == true % plot the geometry in a figure
 figure()
@@ -161,11 +198,10 @@ keyboard %programatically inserts a breakpoint, comment this out if you don't wa
 end
 
 %% Material Region Definitions
-% Define the behavior of the HHXT model using the HHXTProperties()
+% Define the behavior of the HHXT model using the |HHXTProperties()|
 % function.  This sets the homogenized properties of the HX for each region
 % of the geometry.  We have to define conditions in 3 seperate region, Faces
 % 1, 2, and 3. 
-% Then apply the behaviors using HHXTMaterial(model,'BuildMaterialMap').
 
 % define core solid materials
 % the core solid is stream 0 and we specify it first on face 1
@@ -213,7 +249,7 @@ fldC = HHXTProperties(model,'Face',1,'Stream',1,...
                    'HydraulicDiameter',D_h,...      %hydraulic diameter in m
                            'Viscosity',c_mu,...      %viscosity in kg/m-s
                              'Nusselt',Nu_C,...
-                              'fDarcy',fmatr);
+                              'fDarcy',fmatr_horz);
 
 % define hot stream (CO2) material
 % the hot stream is stream 2 and we specify it first on face 1
@@ -225,7 +261,7 @@ fldH = HHXTProperties(model,'Face',1,'Stream',2,...
                    'HydraulicDiameter',D_h,...      %hydraulic diameter in m
                            'Viscosity',c_mu,...      %viscosity in kg/m-s
                              'Nusselt',Nu_H,...
-                              'fDarcy',fmatr);
+                              'fDarcy',fmatr_horz);
 
 % specifiy the header turn regions based on flow config
 % the definitions applied to Face 1 can be copied to Faces 2 and 3 by
@@ -257,15 +293,8 @@ switch split{2}
         HHXTProperties(model,'Face',3,'Material',fldH,'fDarcy',fmatr_vert);
 end
 
-% build material map
-if verbose == true
-disp('    ...building material map')
-end
-HHXTMaterial(model,'BuildMaterialMap');
-
-
 %% Apply Initial Conditions
-% Apply initial conditions using the setInitialConditions() function.
+% Apply initial conditions using the |setInitialConditions()| function.
 
 % set initial conditions
 % these are just guesses so the solver can start from somewhere
@@ -276,7 +305,7 @@ u0 = [0.25*(T_C_in+T_C_out+T_H_in+T_H_out),...
 setInitialConditions(model,u0);
 
 %% Define Boundary Conditions
-% Define boundary conditions using the applyStreamBoundaryCondition() function.  
+% Define boundary conditions using the |applyStreamBoundaryCondition()| function.  
 
 % The inlets and outlets depend on which streams are straight through and
 % which enter and exit at the sides
@@ -337,12 +366,11 @@ switch flowBC
 end
 
 %% Solve the steady state problem
-% Solve the HHXT model using the solveHHXTpde() function.
+% Solve the HHXT model using the |solveHHXTpde()| function.
 
 if verbose == true
 disp('starting steady state solution :...')    
 end
-
 
 %run the steady state solution, and time and display progress
 if verbose == true
@@ -368,7 +396,7 @@ keyboard %programatically inserts a breakpoint
 end
 
 %% Display Results
-% View the part of the results object.  The results.Tables provide an
+% View the part of the results object.  The |results.Tables| provide an
 % overview of the problem.
 
 % display results
@@ -396,7 +424,7 @@ disp(length(results.Mesh.Elements))
 end
 
 %% Plot Model Results
-% Plot the results of the model using the hhxt.PlotHHXT() class.
+% Plot the results of the model using the |hhxt.PlotHHXT()| class.
 
 if plotting == true
 dir_plotting = [cd,'\figures'];
@@ -405,7 +433,7 @@ end
 
 %% Friction Factor Coefficient Function
 % The microchannel friction factor can only be Reynolds dependent.
-% Functional deifinitinos must accept the input (Re)
+% Functional definitinos must accept the input (Re)
 % Where Re is an array of Reynolds numbers
 
 function fmatrix = ff_D_horz(Re)
@@ -460,7 +488,7 @@ end
 % The microchannel heat transfer coefficient can be dependent on position,
 % time, Reynolds number, and Prandtl number.
 % Functional deifinitions must accept the following inputs (pos,time,Re,Pr)
-% Where pos is a structure containing arrays of coordinates pos.x and pos.y
+% Where pos is a structure containing arrays of coordinates pos [x;y]
 % And where time, Re, and Pr are arrays of time in sec,
 % Reynolds number, and Prandtl number.
 % Note the here the Re is the Reynolds magnitude, i.e. magnitude of the
@@ -480,7 +508,7 @@ end
 % Properties of the solid body, stream 0, can be dependent on position,
 % time, and temperature.  
 % Functional definitions must accept the inputs (pos,time,temp)
-% Where pos is a structure containing arrays of coordinates pos.x and pos.y
+% Where pos is a structure containing arrays of coordinates pos [x;y]
 % And where time and temp are arrays of time in sec and temperature in C.
 
 % although this basically just implements a constant property, the
@@ -502,7 +530,7 @@ end
 % Properties of the fluids, streams 1 & 2, can be dependent on position,
 % time, temperature, and pressure.  
 % Functional definitions must accept the inputs (pos,time,temp,press)
-% Where pos is a structure containing arrays of coordinates pos.x and pos.y.
+% Where pos is a structure containing arrays of coordinates pos [x;y].
 % And where time, temp, and press are arrays of time in sec,
 % temperature in C, and pressure in Pa.
 
@@ -547,7 +575,7 @@ end
 % Properties of the fluids, streams 1 & 2, can be dependent on position,
 % time, temperature, and pressure.  
 % Functional definitions must accept the inputs (pos,time,temp,press)
-% Where pos is a structure containing arrays of coordinates pos.x and pos.y.
+% Where pos is a structure containing arrays of coordinates pos [x;y].
 % And where time, temp, and press are arrays of time in sec,
 % temperature in C, and pressure in Pa.
 
