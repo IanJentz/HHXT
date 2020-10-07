@@ -1,0 +1,9 @@
+0.1,Point1
+0.2,Point2
+0.3,Point3
+0.4,Point4
+0.5,Point5
+0.6,Point6
+0.7,Point7
+0.8,Point8
+0.9,Point9
