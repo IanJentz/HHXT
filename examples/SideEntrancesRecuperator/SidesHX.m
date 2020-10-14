@@ -15,7 +15,7 @@ plotting = true; % choose to plot as the script progresses
 layout = 'side-straight'; % 'chose straight or side for hot and cold side, e.g. straight-side for straight on cold side and side on hot side
 
 propmode = 'const'; %'const','isobar', or 'real', for CO2 properties
-flowBC = 'mdot'; %'DP', 'mdot', or 'mflux', for Pressure drop, mass flow, or mass flux Boundary Conditions
+flowBC = 'DP'; %'DP', 'mdot', or 'mflux', for Pressure drop, mass flow, or mass flux Boundary Conditions
 fNumode = 'const'; %'const' or 'func', for Darcy friction factor and Nusselt number
 
 %file handeling
@@ -88,7 +88,7 @@ switch fNumode
         fmatr_vert = [100*f_D;f_D]; % direction friction factor (channels are in y direction)
         Nu_C = Nu;  % Nusselt on cold side
         Nu_H = Nu;  % Nusselt on hot side
-    case 'Re dependent'
+    case 'func'
         fmatr_horz = @ff_D_horz; % Colebrook friction factor (Moody Chart) in x direction
         fmatr_vert = @ff_D_vert; % Colebrook friction factor (Moody Chart) in x direction
         Nu_C = @fNu_C; % Dittus-Boelter equation for heating fluid
@@ -140,7 +140,7 @@ end
 
 if breakpoints == true
 disp('....press F5 to continue')
-keyboard %programatically inserts a breakpoint, comment this out if you don't want breakpoints
+keyboard %programatically inserts a breakpoint
 end
 
 %% Mesh the problem
@@ -194,7 +194,7 @@ end
 
 if breakpoints == true
 disp('....press F5 to continue')
-keyboard %programatically inserts a breakpoint, comment this out if you don't want breakpoints
+keyboard %programatically inserts a breakpoint
 end
 
 %% Material Region Definitions

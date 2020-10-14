@@ -1,6 +1,6 @@
 %% Define how this script runs
 
-breakpoints = true; %will pause execution at points, press F5 to continue
+breakpoints = false; %will pause execution at points, press F5 to continue
 verbose = true; % will write progress and output to command line
 plotting = true; % choose to plot as the script progresses
 
@@ -9,7 +9,9 @@ plotting = true; % choose to plot as the script progresses
 % 'simple' uses a 29 degree rotation of the channels throughout
 % 'complex' uses a more realistic mulit-rotational position dependent path
 % see InternalHeader_MicrochannelTransforms.pdf for illustration
-GammaMode = 'simple';
+GammaMode = 'complex';
+
+flowBC = 'mdot'; %'DP', or 'mdot' for Pressure drop, or mass flow Boundary Conditions
 
 %file handeling
 basename = 'IntHdrHX_Results';
@@ -36,7 +38,7 @@ m_dot_C = 0.3;      %mass flow in kg/s
 T_C_in = 50;        %temperature in C
 T_C_out = 592;      %temperature in C
 P_C_in = 27.5e6;    %pressure in Pa
-DP_C = 0.31e6;       %pressure drop in Pa
+DP_C = 4*0.31e6;       %pressure drop in Pa
 P_C_out = P_C_in - DP_C; 
 
 %hot side conditions
@@ -44,7 +46,7 @@ m_dot_H = 0.3;      %mass flow in kg/s
 T_H_in = 650;       %temperature in C
 T_H_out = 85;       %temperature in C
 P_H_in = P_C_out;    %pressure in Pa
-DP_H = 0.32e6;       %pressure drop in Pa
+DP_H = 4*0.32e6;       %pressure drop in Pa
 P_H_out = P_H_in - DP_H;
 
 % we define the micro-channel geometry.  Our HX consists of 27 hot plates
@@ -58,27 +60,12 @@ phi_C = ((28/55)*phi_core); % volume fraction of cold channels within the core (
 phi_H = ((27/55)*phi_core); % volume fraction of hot channels within the core (27 of 55 plates)
 
 %dimensionless channel performance parameters
-% if fNumode = 'const', constant values
-% if fNumode = 'func', functional definitions @ff_D, @fNu_C and @fNu_H are used
-%                      where @ff_D is the Colebrook friction factor
-%                      relation and @fNu_C, @fNu_H are the Dittus-Boelter
-%                      relations for a heated and cooled fluid respectively
-% note that the friction factor must be defined as a friction factor matrix
-% fmatr = [f_D_x;f_D_y] where we will arbitrarily set the y direction
-% Darcy friction factor to 100 times that in the x direction. This will
-% impose directionality of the microchannels, restricting flow to the x
-% direction.
-% note in order to accomodate side flow regions, we need to alter the
-% direction of flow by changin the direction of the microchannels.  This is
-% done by changing the directionality of the friction factor tensor.  We
-% will use two friction factor tensoer, fmatr_horz and fmatr_vert which
-% have f_D oriented in the x and y direction respectively.
 f_D = 0.181;
 fmatr = [f_D;100*f_D];
 Nu = 59.4;
 
 %% Problem Initialization
-% Construct the HHXT model object using the createHHXT() function.  Set the
+% Construct the HHXT model object using the |createHHXT()| function.  Set the
 % analyis to be a steady state problem using the AnalysisType property.
 % Set the solution options using the MatrixOptions property.  Set the
 % solver options using the SolverOptions property
@@ -98,10 +85,12 @@ model.MatrixOptions = {...
     'ResistanceMode','Nusselt', ... % with Thermal resistance to heat transfer defined by a Nusselt number
     'Conductivity','aniso',...      % with anisotropic conductivity in the solid body
     'FluidConduction','on','Advection','on',... % with both conductive and advective heat transport within the fluid streams
-    'PermeabilityTransform','on'};
+    'PermeabilityTransform','on'};  % we turn on permeability transform as 
+                                    % we are defining rotational transformations 
+                                    % of the microchannel direction, Gamma
 
 % the solver options are...
-model.SolverOptions.MaxIterations = 10;
+model.SolverOptions.MaxIterations = 20;
 model.SolverOptions.ResidualTolerance = 1e-6;
 model.SolverOptions.MinStep = 1;  % smaller steps (<1) can be taken but are not necessary
 model.SolverOptions.AbsoluteTolerance = 1e-2;
@@ -110,10 +99,10 @@ if verbose == true
 end
 
 %% Geometry
-% Define the geometry of the HX using the Geom_IntHdrHX() function.
+% Define the geometry of the HX using the |Geom_IntHdrHX()| function.
 % This will result in a geometry with 10 Faces/Regions and 54 edges
 %
-% Then internal header heat exchanger has fluid inlets and outlets that are
+% The internal header heat exchanger has fluid inlets and outlets that are
 % contained within the recuperator body.  Instead of having fluids exit at
 % the sides or end of the heat exchanger the hot and cold sides are
 % seperated and routed to different circulare intlet and outlet plenums.
@@ -141,18 +130,26 @@ end
 if breakpoints == true
 disp('....press F5 to continue')
 
-keyboard %programatically inserts a breakpoint, comment this out if you don't want breakpoints
+keyboard %programatically inserts a breakpoint
 end
 
 %% Mesh the problem
-% Mesh the geometry using the generateMesh() function.  The HHXT model only
+% Mesh the geometry using the |generateMesh()| function.  The HHXT model only
 % works with linear elements only at this point.
+%
+% Refine the mesh once within the internal header regions.
+% Use the |refineHHXTmesh()| function.
 
 % generate a mesh of linear tets
 if verbose == true
 disp('    ...generating mesh')
 end
 generateMesh(model,'Hmax',H_max,'GeometricOrder','linear');
+
+% calling refineHHXTmesh with a single integer or row of integers
+% will refine the mesh within the region/face that is specified.
+model = refineHHXTmesh(model,[1,2,4,5,6,8,9,10]);    % refine triangles within Faces 1,2 ,3 ,4 ,6, 8, 9, & 10
+% model = refineHHXTmesh(model,[1,2,5,8,9,10]);    % refine triangles within Faces 1,2 ,3, 8, 9, & 10
 
 if plotting == true % plot the geometry in a figure
 figure()
@@ -161,15 +158,14 @@ end
 
 if breakpoints == true
 disp('....press F5 to continue')
-keyboard %programatically inserts a breakpoint, comment this out if you don't want breakpoints
+keyboard %programatically inserts a breakpoint
 end
 
 %% Material Region Definitions
-% Define the behavior of the HHXT model using the HHXTProperties()
+% Define the behavior of the HHXT model using the |HHXTProperties()|
 % function.  This sets the homogenized properties of the HX for each region
 % of the geometry.  We have to define conditions in 10 seperate region,
 % Faces 1-10.
-% Then apply the behaviors using HHXTMaterial(model,'BuildMaterialMap').
 %
 % The internal header recuperator presents two unique challenges:
 % 1) The number and distribution of channels change within the jump,
@@ -297,14 +293,8 @@ switch GammaMode
 
 end
 
-% % build material map
-% if verbose == true
-% disp('    ...building material map')
-% end
-% HHXTMaterial(model,'BuildMaterialMap');
-
 %% Apply Initial Conditions
-% Apply initial conditions using the setInitialConditions() function.
+% Apply initial conditions using the |setInitialConditions()| function.
 
 % set initial conditions
 % these are just guesses so the solver can start from somewhere
@@ -314,75 +304,90 @@ u0 = [0.25*(T_C_in+T_C_out+T_H_in+T_H_out),...
       0.5*(P_H_in+P_H_out),0.5*(T_H_in+T_H_out)]';
 setInitialConditions(model,u0);
 
-%% Run a simple model to establish an initial condition state
-
-if verbose == true
-disp('creating an intial condition result:...')    
-end
-
-T_sep = 0;
-
-%boundary conditions       
-DBC = [P_C_in,T_C_in-T_sep];
-EBC = [2,3];
-applyBoundaryCondition(model,'mixed','Edge',36,'u',DBC,'EquationIndex',EBC);
-applyBoundaryCondition(model,'mixed','Edge',37,'u',DBC,'EquationIndex',EBC);
-DBC = [P_H_out,T_H_out+T_sep];
-EBC = [4,5];
-applyBoundaryCondition(model,'mixed','Edge',51,'u',DBC,'EquationIndex',EBC);
-applyBoundaryCondition(model,'mixed','Edge',52,'u',DBC,'EquationIndex',EBC);
-DBC = [P_H_in,T_H_in+T_sep];
-EBC = [4,5];
-applyBoundaryCondition(model,'mixed','Edge',43,'u',DBC,'EquationIndex',EBC);
-applyBoundaryCondition(model,'mixed','Edge',44,'u',DBC,'EquationIndex',EBC);
-DBC = [P_C_out,T_C_out-T_sep];
-EBC = [2,3];
-applyBoundaryCondition(model,'mixed','Edge',45,'u',DBC,'EquationIndex',EBC);
-applyBoundaryCondition(model,'mixed','Edge',49,'u',DBC,'EquationIndex',EBC);
-DBC = 0.5*(T_C_in+T_H_out);
-EBC = 1;
-applyBoundaryCondition(model,'mixed','Edge',32,'u',DBC,'EquationIndex',EBC);
-DBC = 0.5*(T_C_out+T_H_in);
-EBC = 1;
-applyBoundaryCondition(model,'mixed','Edge',1,'u',DBC,'EquationIndex',EBC);
-
-% create and solve a simple conduction only PDE using Matlab's PDE toolbox
-specifyCoefficients(model,'m',0,'d',0,'c',1,'a',0,'f',zeros(5,1)); % N=5
-results = solvepde(model);
-
-% save the model and results to file
-save(file_init,'model','results');
-
-% set the initial condition to the results of the simple model
-setInitialConditions(model,results);
+% %% Run a simple model to establish an initial condition state
+% 
+% if verbose == true
+% disp('creating an intial condition result:...')    
+% end
+% 
+% T_sep = 0;
+% 
+% %boundary conditions       
+% DBC = [P_C_in,T_C_in-T_sep];
+% EBC = [2,3];
+% applyBoundaryCondition(model,'mixed','Edge',36,'u',DBC,'EquationIndex',EBC);
+% applyBoundaryCondition(model,'mixed','Edge',37,'u',DBC,'EquationIndex',EBC);
+% DBC = [P_H_out,T_H_out+T_sep];
+% EBC = [4,5];
+% applyBoundaryCondition(model,'mixed','Edge',51,'u',DBC,'EquationIndex',EBC);
+% applyBoundaryCondition(model,'mixed','Edge',52,'u',DBC,'EquationIndex',EBC);
+% DBC = [P_H_in,T_H_in+T_sep];
+% EBC = [4,5];
+% applyBoundaryCondition(model,'mixed','Edge',43,'u',DBC,'EquationIndex',EBC);
+% applyBoundaryCondition(model,'mixed','Edge',44,'u',DBC,'EquationIndex',EBC);
+% DBC = [P_C_out,T_C_out-T_sep];
+% EBC = [2,3];
+% applyBoundaryCondition(model,'mixed','Edge',45,'u',DBC,'EquationIndex',EBC);
+% applyBoundaryCondition(model,'mixed','Edge',49,'u',DBC,'EquationIndex',EBC);
+% DBC = 0.5*(T_C_in+T_H_out);
+% EBC = 1;
+% applyBoundaryCondition(model,'mixed','Edge',32,'u',DBC,'EquationIndex',EBC);
+% DBC = 0.5*(T_C_out+T_H_in);
+% EBC = 1;
+% applyBoundaryCondition(model,'mixed','Edge',1,'u',DBC,'EquationIndex',EBC);
+% 
+% % create and solve a simple conduction only PDE using Matlab's PDE toolbox
+% specifyCoefficients(model,'m',0,'d',0,'c',1,'a',0,'f',zeros(5,1)); % N=5
+% results = solvepde(model);
+% 
+% % save the model and results to file
+% save(file_init,'model','results');
+% 
+% % set the initial condition to the results of the simple model
+% setInitialConditions(model,results);
 
 %% Define Boundary Conditions
-% Define boundary conditions using the applyStreamBoundaryCondition() function.  
+% Define boundary conditions using the |applyStreamBoundaryCondition()| function.  
 
-delete(model.BoundaryConditions);
+% delete(model.BoundaryConditions);
 
 % note that the inlets and outlets are each composed of two edges
 C_edges_in = [36,37];
-C_edges_out = [51,52];
+H_edges_out = [51,52];
 H_edges_in = [43,44];
-H_edges_out = [45,49];
+C_edges_out = [45,49];
 
-%cold stream
-applyStreamBoundaryCondition(model,'Edge',C_edges_in,'Stream',1,'Direction','inlet',...
-    'Pressure',P_C_in,'Temperature',T_C_in,...
-    'MassFlow',m_dot_C);
-applyStreamBoundaryCondition(model,'Edge',C_edges_out,'Stream',1,'Direction','outlet',...
-    'MassFlow',m_dot_C);
-%hot stream
-applyStreamBoundaryCondition(model,'Edge',H_edges_in,'Stream',2,'Direction','inlet',...
-    'Pressure',P_H_in,'Temperature',T_H_in,...
-    'MassFlow',m_dot_H);
-applyStreamBoundaryCondition(model,'Edge',H_edges_out,'Stream',2,'Direction','outlet',...
-    'MassFlow',m_dot_H);
+switch flowBC
+    case 'DP'
+        %cold stream
+        applyStreamBoundaryCondition(model,'Edge',C_edges_in,'Stream',1,'Direction','inlet',...
+            'Pressure',P_C_in,'Temperature',T_C_in);
+        applyStreamBoundaryCondition(model,'Edge',C_edges_out,'Stream',1,'Direction','outlet',...
+            'Pressure',P_C_out);
+        %hot stream
+        applyStreamBoundaryCondition(model,'Edge',H_edges_in,'Stream',2,'Direction','inlet',...
+            'Pressure',P_H_in,'Temperature',T_H_in);
+        applyStreamBoundaryCondition(model,'Edge',H_edges_out,'Stream',2,'Direction','outlet',...
+            'Pressure',P_H_out);
+    case 'mdot'
+        %cold stream
+        applyStreamBoundaryCondition(model,'Edge',C_edges_in,'Stream',1,'Direction','inlet',...
+            'Pressure',P_C_in,'Temperature',T_C_in,...
+            'MassFlow',m_dot_C);
+        applyStreamBoundaryCondition(model,'Edge',C_edges_out,'Stream',1,'Direction','outlet',...
+            'MassFlow',m_dot_C);
+        %hot stream
+        applyStreamBoundaryCondition(model,'Edge',H_edges_in,'Stream',2,'Direction','inlet',...
+            'Pressure',P_H_in,'Temperature',T_H_in,...
+            'MassFlow',m_dot_H);
+        applyStreamBoundaryCondition(model,'Edge',H_edges_out,'Stream',2,'Direction','outlet',...
+            'MassFlow',m_dot_H);
+end
+
 
 
 %% Solve the steady state problem
-% Solve the HHXT model using the solveHHXTpde() function.
+% Solve the HHXT model using the |solveHHXTpde()| function.
 
 if verbose == true
 disp('starting steady state solution :...')    
@@ -412,7 +417,7 @@ keyboard %programatically inserts a breakpoint
 end
 
 %% Display Results
-% View the part of the results object.  The results.Tables provide an
+% View the part of the results object.  The |results.Tables| provide an
 % overview of the problem.
 
 % display results
@@ -440,7 +445,7 @@ disp(length(results.Mesh.Elements))
 end
 
 %% Plot Model Results
-% Plot the results of the model using the hhxt.PlotHHXT() class.
+% Plot the results of the model using the |hhxt.PlotHHXT()} class.
 
 if plotting == true
 dir_plotting = [cd,'\figures'];
@@ -461,14 +466,14 @@ function phi = phi_C_jump(pos,time)
     global phi_C
     phi = phi_C;
 
-    % the volume fraction of the cold channels decreases is halved across
-    % the jump region
-    x_7 = 0.304551080000000;    
-    x_8 = 0.308592220000000;
-    x = abs(pos(1,:));
-    val = interp1([x_8,x_7],[phi,0.5*phi],x);
-    val(x<x_8) = phi; val(x>x_7) = x_7;
-    phi = val; % cold channel volume fraction 
+%     % the volume fraction of the cold channels decreases is halved across
+%     % the jump region
+%     x_7 = 0.304551080000000;    
+%     x_8 = 0.308592220000000;
+%     x = abs(pos(1,:));
+%     val = interp1([x_8,x_7],[phi,0.5*phi],x);
+%     val(x<x_8) = phi; val(x>x_7) = x_7;
+%     phi = val; % cold channel volume fraction 
 end
 
 function phi = phi_H_jump(pos,time)
@@ -477,14 +482,14 @@ function phi = phi_H_jump(pos,time)
     global phi_H
     phi = phi_H;
 
-    % the volume fraction of the hot channels decreases is halved across
-    % the jump region
-    x_7 = 0.304551080000000;    
-    x_8 = 0.308592220000000;
-    x = abs(pos(1,:));
-    val = interp1([x_8,x_7],[phi,0.5*phi],x);
-    val(x<x_8) = phi; val(x>x_7) = x_7;
-    phi = val; % hot channel volume fraction 
+%     % the volume fraction of the hot channels decreases is halved across
+%     % the jump region
+%     x_7 = 0.304551080000000;    
+%     x_8 = 0.308592220000000;
+%     x = abs(pos(1,:));
+%     val = interp1([x_8,x_7],[phi,0.5*phi],x);
+%     val(x<x_8) = phi; val(x>x_7) = x_7;
+%     phi = val; % hot channel volume fraction 
 end
 
 function phi = phi_S_jump(pos,time)
@@ -501,14 +506,14 @@ function phi = phi_C_trans(pos,time)
     global phi_C
     phi = 0.5*phi_C; % the volume fraction of cold channels is half that of the core
     
-    % the volume fraction of the hot channels incrreases by x2.2135 as we 
-    % get closer to the inlet/outlet
-    x_9 = 0.311134760000000;
-    x_10 = 0.342752680000000;
-    x = abs(pos(1,:));
-    val = interp1([x_9,x_10],[phi,2.2135*phi],x);
-    val(x<=x_9) = phi; val(x>=x_10) = 2.2135*phi;
-    phi = val; % cold channel volume fraction 
+%     % the volume fraction of the hot channels incrreases by x2.2135 as we 
+%     % get closer to the inlet/outlet
+%     x_9 = 0.311134760000000;
+%     x_10 = 0.342752680000000;
+%     x = abs(pos(1,:));
+%     val = interp1([x_9,x_10],[phi,2.2135*phi],x);
+%     val(x<=x_9) = phi; val(x>=x_10) = 2.2135*phi;
+%     phi = val; % cold channel volume fraction 
 end
 
 function phi = phi_H_trans(pos,time)
@@ -517,14 +522,14 @@ function phi = phi_H_trans(pos,time)
     global phi_H
     phi = 0.5*phi_H; % the volume fraction of hot channels is half that of the core
     
-    % the volume fraction of the hot channels incrreases by x2.2135 as we 
-    % get closer to the inlet/outlet
-    x_9 = 0.311134760000000;
-    x_10 = 0.342752680000000;
-    x = abs(pos(1,:));
-    val = interp1([x_9,x_10],[phi,2.2135*phi],x);
-    val(x<=x_9) = phi; val(x>=x_10) = 2.2135*phi;
-    phi = val; % hot channel volume fraction 
+%     % the volume fraction of the hot channels incrreases by x2.2135 as we 
+%     % get closer to the inlet/outlet
+%     x_9 = 0.311134760000000;
+%     x_10 = 0.342752680000000;
+%     x = abs(pos(1,:));
+%     val = interp1([x_9,x_10],[phi,2.2135*phi],x);
+%     val(x<=x_9) = phi; val(x>=x_10) = 2.2135*phi;
+%     phi = val; % hot channel volume fraction 
 end
 
 function phi = phi_SHC_trans(pos,time)

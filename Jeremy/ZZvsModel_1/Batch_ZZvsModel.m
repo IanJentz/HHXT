@@ -7,7 +7,7 @@
 
 f_D = 0.4507; % we will keep friction factor constant
 j_C_lo = 0.005; j_C_hi = .5; % range of Colburn heat transfer coefficients
-N_j = 5; % number of heat transfer coeffs to run
+N_j = 11; % number of heat transfer coeffs to run
 j_C = logspace(log10(j_C_lo),log10(j_C_hi),N_j); % distribute j_C logarithmically
 
 % preallocate the result variables as column arrays

@@ -18,6 +18,8 @@ mkdir(dir_plot);
 warning on
 
 load(filename,'results','model')
+T_C_in = 50;
+T_H_in = 650;
 T_C_in = results.Tables{3}.Temperature(1);
 T_H_in = results.Tables{4}.Temperature(1);
 
