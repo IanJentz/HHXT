@@ -25,20 +25,14 @@ file_init = [basename,'_init']; % intial condition results filename
 
 %geometry
 H_max = 0.005;  %mesh size, maximum size of an element in m^2
-L = 0.77387;      %length in m
-W = 0.1207;    %width in m
-H = 0.1;    %height in m (although the model is 2D it has a finite thickness)
-wall = 0.5*25.4e-3;  %thickness of the solid side wall
-offsets = [0.0072,-0.0026416,0.0067437];
-header_thk = 0.531*25.4e-3;  %thickness of the wall of the internal headers
-stickout = 0.25*25.4e-3;
+H = 77e-3;    %height in m (although the model is 2D it has a finite thickness)
 
 %cold side conditions
 m_dot_C = 0.3;      %mass flow in kg/s
 T_C_in = 50;        %temperature in C
 T_C_out = 592;      %temperature in C
 P_C_in = 27.5e6;    %pressure in Pa
-DP_C = 4*0.31e6;       %pressure drop in Pa
+DP_C = 0.31e6;       %pressure drop in Pa
 P_C_out = P_C_in - DP_C; 
 
 %hot side conditions
@@ -46,21 +40,21 @@ m_dot_H = 0.3;      %mass flow in kg/s
 T_H_in = 650;       %temperature in C
 T_H_out = 85;       %temperature in C
 P_H_in = P_C_out;    %pressure in Pa
-DP_H = 4*0.32e6;       %pressure drop in Pa
+DP_H = 0.32e6;       %pressure drop in Pa
 P_H_out = P_H_in - DP_H;
 
 % we define the micro-channel geometry.  Our HX consists of 27 hot plates
 % and 28 cold plates, each containing the same Zig-zag micro-channel
 % note the phase fraction varaibels are global so that they can be used
 % within functional phase fraction definitions, e.g. @phi_SHC_trans
-D_h = 0.9382e-3; % the hydraulic diameter of the micro-channel in m
+D_h = 0.9523e-3; % the hydraulic diameter of the micro-channel in m
 global phi_C phi_H
 phi_core = 0.2041; % volume fraction of channels in the core
 phi_C = ((28/55)*phi_core); % volume fraction of cold channels within the core (28 of 55 plates)
 phi_H = ((27/55)*phi_core); % volume fraction of hot channels within the core (27 of 55 plates)
 
 %dimensionless channel performance parameters
-f_D = 0.181;
+f_D = 0.181; %Darcy friction factor four times the fanning factor
 fmatr = [f_D;100*f_D];
 Nu = 59.4;
 
@@ -303,48 +297,6 @@ u0 = [0.25*(T_C_in+T_C_out+T_H_in+T_H_out),...
       0.5*(P_C_in+P_C_out),0.5*(T_C_in+T_C_out),...
       0.5*(P_H_in+P_H_out),0.5*(T_H_in+T_H_out)]';
 setInitialConditions(model,u0);
-
-% %% Run a simple model to establish an initial condition state
-% 
-% if verbose == true
-% disp('creating an intial condition result:...')    
-% end
-% 
-% T_sep = 0;
-% 
-% %boundary conditions       
-% DBC = [P_C_in,T_C_in-T_sep];
-% EBC = [2,3];
-% applyBoundaryCondition(model,'mixed','Edge',36,'u',DBC,'EquationIndex',EBC);
-% applyBoundaryCondition(model,'mixed','Edge',37,'u',DBC,'EquationIndex',EBC);
-% DBC = [P_H_out,T_H_out+T_sep];
-% EBC = [4,5];
-% applyBoundaryCondition(model,'mixed','Edge',51,'u',DBC,'EquationIndex',EBC);
-% applyBoundaryCondition(model,'mixed','Edge',52,'u',DBC,'EquationIndex',EBC);
-% DBC = [P_H_in,T_H_in+T_sep];
-% EBC = [4,5];
-% applyBoundaryCondition(model,'mixed','Edge',43,'u',DBC,'EquationIndex',EBC);
-% applyBoundaryCondition(model,'mixed','Edge',44,'u',DBC,'EquationIndex',EBC);
-% DBC = [P_C_out,T_C_out-T_sep];
-% EBC = [2,3];
-% applyBoundaryCondition(model,'mixed','Edge',45,'u',DBC,'EquationIndex',EBC);
-% applyBoundaryCondition(model,'mixed','Edge',49,'u',DBC,'EquationIndex',EBC);
-% DBC = 0.5*(T_C_in+T_H_out);
-% EBC = 1;
-% applyBoundaryCondition(model,'mixed','Edge',32,'u',DBC,'EquationIndex',EBC);
-% DBC = 0.5*(T_C_out+T_H_in);
-% EBC = 1;
-% applyBoundaryCondition(model,'mixed','Edge',1,'u',DBC,'EquationIndex',EBC);
-% 
-% % create and solve a simple conduction only PDE using Matlab's PDE toolbox
-% specifyCoefficients(model,'m',0,'d',0,'c',1,'a',0,'f',zeros(5,1)); % N=5
-% results = solvepde(model);
-% 
-% % save the model and results to file
-% save(file_init,'model','results');
-% 
-% % set the initial condition to the results of the simple model
-% setInitialConditions(model,results);
 
 %% Define Boundary Conditions
 % Define boundary conditions using the |applyStreamBoundaryCondition()| function.  
