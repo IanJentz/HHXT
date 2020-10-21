@@ -10,8 +10,11 @@ plotting = true; % choose to plot as the script progresses
 % 'complex' uses a more realistic mulit-rotational position dependent path
 % see InternalHeader_MicrochannelTransforms.pdf for illustration
 GammaMode = 'complex';
+<<<<<<< Updated upstream
 
 flowBC = 'mdot'; %'DP', or 'mdot' for Pressure drop, or mass flow Boundary Conditions
+=======
+>>>>>>> Stashed changes
 
 %file handeling
 basename = 'IntHdrHX_Results';
