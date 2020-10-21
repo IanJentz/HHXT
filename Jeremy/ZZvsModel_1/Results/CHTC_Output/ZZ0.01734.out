@@ -1,0 +1,86 @@
+------------------------------------------
+Setting up environment variables
+---
+LD_LIBRARY_PATH is .:v95/runtime/glnxa64:v95/bin/glnxa64:v95/sys/os/glnxa64:v95/sys/opengl/lib/glnxa64
+
+j_C =
+
+    0.0173
+
+
+f_D =
+
+    0.4507
+
+
+file =
+
+    'not needed'
+
+
+input_instance =
+
+    '0.01734'
+
+
+Re_C =
+
+   2.4190e+03
+
+
+Re_H =
+
+   2.8940e+03
+
+
+cmp_fiber =
+
+   27.5873   17.5081
+
+
+cmp_TC =
+
+    5.2946   11.1259    5.6572    6.0671
+
+
+rmsd_fiber =
+
+   27.5873
+
+
+rmsd_TC =
+
+    5.2946
+
+
+cmp_hyd =
+
+   1.0e+03 *
+
+    1.7016    0.3518
+
+
+cmp_tmp =
+
+   15.0718   13.8161
+
+
+cmp_hxt =
+
+  501.3821  233.5486
+
+
+rmsd_DP =
+
+   1.7016e+03
+
+
+rmsd_Tout =
+
+   15.0718
+
+
+rmsd_qdot =
+
+  501.3821
+
