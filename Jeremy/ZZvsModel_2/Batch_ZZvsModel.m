@@ -20,6 +20,9 @@ f_D_i = f_D_i(:);
 j_C_C_i = j_C_C_i(:);
 j_C_H_i = j_C_H_i(:);
 
+var_to_copy = [f_D_i,j_C_C_i,j_C_H_i];
+
+
 % preallocate the result variables as column arrays
 zcol = zeros(N,1);
 rmsd_fiber = zcol;
