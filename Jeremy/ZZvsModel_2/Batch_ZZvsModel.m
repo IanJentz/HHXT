@@ -22,7 +22,7 @@ j_C_H_i = j_C_H_i(:);
 
 % preallocate the result variables as column arrays
 zcol = zeros(N,1);
-a_rmsd_fiber = zcol;
+rmsd_fiber = zcol;
 rmsd_TC = zcol;
 rmsd_DP = zcol;
 rmsd_Tout = zcol;

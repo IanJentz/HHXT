@@ -578,7 +578,7 @@ solve_time = toc;
 finish_date = datestr(now);
 disp(['finished steady state solution : at ',finish_date,' elapsed time ',num2str(solve_time),' sec'])
 end
-save(filename,'model','results');
+% save(filename,'model','results');
 if verbose == true
 disp(['    state saved to ',filename,'.mat']);
 end
