@@ -242,26 +242,26 @@ end
 % define cold stream (CO2) material
 % the cold stream is stream 1 and we specify it first on face 1
 fldC = HHXTProperties(model,'Face',1,'Stream',1,...
-                       'PhaseFraction',phi_C,...
-                 'ThermalConductivity',c_k,...       %thermal conductivity in W/m-K
-                         'MassDensity',c_rho,...     %densitiy in kg/m3
-                        'SpecificHeat',c_cp,...      %heat capacity in J/kg-K
-                   'HydraulicDiameter',D_h,...      %hydraulic diameter in m
-                           'Viscosity',c_mu,...      %viscosity in kg/m-s
-                             'Nusselt',Nu_C,...
-                              'fDarcy',fmatr_horz);
+   'PhaseFraction',phi_C,...
+   'HydraulicDiameter',D_h,...  %hydraulic diameter in m
+ 'ThermalConductivity',c_k,...  %thermal conductivity in W/m-K
+         'MassDensity',c_rho,...%densitiy in kg/m3
+        'SpecificHeat',c_cp,... %heat capacity in J/kg-K
+           'Viscosity',c_mu,... %viscosity in kg/m-s
+             'Nusselt',Nu_C,...
+              'fDarcy',fmatr_horz);
 
 % define hot stream (CO2) material
 % the hot stream is stream 2 and we specify it first on face 1
 fldH = HHXTProperties(model,'Face',1,'Stream',2,...
-                       'PhaseFraction',phi_H,...
-                 'ThermalConductivity',c_k,...       %thermal conductivity in W/m-K
-                         'MassDensity',c_rho,...     %densitiy in kg/m3
-                        'SpecificHeat',c_cp,...      %heat capacity in J/kg-K
-                   'HydraulicDiameter',D_h,...      %hydraulic diameter in m
-                           'Viscosity',c_mu,...      %viscosity in kg/m-s
-                             'Nusselt',Nu_H,...
-                              'fDarcy',fmatr_horz);
+   'PhaseFraction',phi_H,...
+   'HydraulicDiameter',D_h,...  %hydraulic diameter in m
+ 'ThermalConductivity',c_k,...  %thermal conductivity in W/m-K
+         'MassDensity',c_rho,...%densitiy in kg/m3
+        'SpecificHeat',c_cp,... %heat capacity in J/kg-K
+           'Viscosity',c_mu,... %viscosity in kg/m-s
+             'Nusselt',Nu_C,...
+              'fDarcy',fmatr_horz);
 
 % specifiy the header turn regions based on flow config
 % the definitions applied to Face 1 can be copied to Faces 2 and 3 by

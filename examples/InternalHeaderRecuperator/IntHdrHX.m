@@ -10,16 +10,11 @@ plotting = true; % choose to plot as the script progresses
 % 'complex' uses a more realistic mulit-rotational position dependent path
 % see InternalHeader_MicrochannelTransforms.pdf for illustration
 GammaMode = 'complex';
-<<<<<<< Updated upstream
-
 flowBC = 'mdot'; %'DP', or 'mdot' for Pressure drop, or mass flow Boundary Conditions
-=======
->>>>>>> Stashed changes
 
 %file handeling
 basename = 'IntHdrHX_Results';
 filename = [basename,'_solu']; % steady state results filename
-file_init = [basename,'_init']; % intial condition results filename
 
 %% HX geometry and condition variables
 % These variables define the geometry of the rectangular model, the
@@ -52,7 +47,7 @@ P_H_out = P_H_in - DP_H;
 % within functional phase fraction definitions, e.g. @phi_SHC_trans
 D_h = 0.9523e-3; % the hydraulic diameter of the micro-channel in m
 global phi_C phi_H
-phi_core = 0.2041; % volume fraction of channels in the core
+phi_core = 0.1902; % volume fraction of channels in the core
 phi_C = ((28/55)*phi_core); % volume fraction of cold channels within the core (28 of 55 plates)
 phi_H = ((27/55)*phi_core); % volume fraction of hot channels within the core (27 of 55 plates)
 
