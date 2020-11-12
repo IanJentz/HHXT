@@ -1,4 +1,4 @@
-function SideHX_CHTC(run,alpha,NTU,C_r)
+function SideHX_CHTC(run,savefile,alpha,NTU,C_r)
 %SideHX Function that runs the Side HX code for use on the CHTC.
 % Does not use any output arguments.  Any variables that you want recorded
 % as output on the CHTC node need to be output to the command line.
@@ -359,7 +359,9 @@ end
 %run the steady state solution, 
 results = solveHHXTpde(model); % solve the model
 
+if savefile == 1
 save(filename,'model','results');
+end
 
 %% Calculate effectiveness and ineffectiveness of HX
 m_dot=min(results.Tables{1,1}{:,2});
