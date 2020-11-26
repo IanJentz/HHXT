@@ -13,11 +13,16 @@ filename = ['SidesHX_',num2str(run,'%04i'),'.mat'];
 %first get the dimensions of the HX based on the corss flow aspect ratio,
 %this keeps the UA constant as 
 %noting that A = W*L, alpha = W/L  W=aL  L=A/W W=aA/W
+if alpha == 0
+    L = 0.678;      %length in m
+    W = 85.78e-3;   %width in m     
+else
 L = 0.678;      %length in m
 W = 85.78e-3;   %width in m
 A = L*W;        % the constant area of the HX
 W = sqrt(alpha*A); %new width
 L = A/W;           %new length
+end
 
 %% NTU
 %0.1 to 100 logscale
@@ -43,7 +48,13 @@ m_dot_H = C_dot_max/c_p_H; %input to SidesHXStudy function
 %% Define how this script runs
 %model configuration
 %these varaibles provide an easy way of changin the behavior of the script
+if alpha == 0
+    layout = 'straight-straight';   %pure counterflow case
+elseif alpha == 1
+    layout = 'cross-cross';    %pure crossflow case
+else
 layout = 'straight-side'; %straight on cold side and headers on hot side
+end
 propmode = 'const'; %'const','isobar', or 'real', for CO2 properties
 flowBC = 'mdot'; %'DP', 'mdot', or 'mflux', for Pressure drop, mass flow, or mass flux Boundary Conditions
 fNumode = 'const'; %'const' or 'func', for Darcy friction factor and Nusselt number
@@ -138,10 +149,11 @@ model.MatrixOptions = {...
     'FluidConduction','on','Advection','on'}; % with both conductive and advective heat transport within the fluid streams
 
 % the solver options are...
-model.SolverOptions.MaxIterations = 20;
+model.SolverOptions.MaxIterations = 200;
 model.SolverOptions.ResidualTolerance = 1e-6;
 model.SolverOptions.MinStep = 1;  % smaller steps (<1) can be taken but are not necessary
 model.SolverOptions.AbsoluteTolerance = 1e0;
+%model.SolverOptions.ReportStatistics = 'off';
 
 %% Geometry
 % Define the geometry of the HX using the |Geom_SideHeaders()| function.
@@ -164,9 +176,15 @@ generateMesh(model,'Hmax',H_max,'GeometricOrder','linear');
 %% Refine the mesh
 % calling refineHHXTmesh with a single integer or row of integers
 % will refine the mesh within the region/face that is specified.
-% refine triangles within Faces 2 & 3
-model = refineHHXTmesh(model,[2,3]);    
-% refine important elements at the edges
+if alpha == 1   %pure crossflow
+    model = refineHHXTmesh(model,[1,2]);
+elseif alpha == 0   %pure counterflow
+    model = refineHHXTmesh(model,[1,2,3]);    
+else
+    model = refineHHXTmesh(model,[2,3]);
+end
+% refine important elements at the edges only for side headers case
+if alpha ~= 0 && alpha ~= 1
 pin = [1.3 1.2 1.1 1 0.9 0.8];
 for i=1:6
     elem_refine = [];
@@ -183,6 +201,7 @@ for i=1:6
         elem_refine = [elem_refine;elem_edge']; % need to be passed as a column
     end
     model = refineHHXTmesh(model,elem_refine);  % elements to refine, input as a column
+end
 end
 
 %% Material Region Definitions
@@ -201,7 +220,9 @@ sld1 = HHXTProperties(model,'Face',1,'Stream',0,...
 % the definition applied to Face 1 can be copied to Faces 2 and 3 by
 % passing the HHXTMaterialAssignment object sld1
 HHXTProperties(model,'Face',2,'Material',sld1);
-HHXTProperties(model,'Face',3,'Material',sld1);
+if alpha ~= 1
+HHXTProperties(model,'Face',3,'Material',sld1);    
+end
 
 % fluid properties can be constant or defined as a function of temp and
 % pressure
@@ -226,7 +247,6 @@ switch propmode
         c_cp = @CO2_cp_real;
         c_mu = @CO2_mu_real;
 end
-
 % define cold stream (CO2) material
 % the cold stream is stream 1 and we specify it first on face 1
 fldC = HHXTProperties(model,'Face',1,'Stream',1,...
@@ -260,7 +280,6 @@ switch split{1}
         % copy the HHXTMaterialAssignment objects and make no changes
         HHXTProperties(model,'Face',2,'Material',fldC);
         HHXTProperties(model,'Face',3,'Material',fldC);
-
     case 'side'
         % when copying HHXTMaterialAssignment objects, individual
         % properties can be overwriten by calling them as before.  In this
@@ -269,6 +288,9 @@ switch split{1}
         % fldC.  All other properties of fldC are kept.
         HHXTProperties(model,'Face',2,'Material',fldC,'fDarcy',fmatr_vert);
         HHXTProperties(model,'Face',3,'Material',fldC,'fDarcy',fmatr_vert);
+    case 'cross'
+        HHXTProperties(model,'Face',2,'Material',fldC);
+        
 end
 switch split{2}
     case 'straight'
@@ -279,6 +301,9 @@ switch split{2}
         % see above comment on copying and modifying HHXTMaterialAssignment objects
         HHXTProperties(model,'Face',2,'Material',fldH,'fDarcy',fmatr_vert);
         HHXTProperties(model,'Face',3,'Material',fldH,'fDarcy',fmatr_vert);
+    case 'cross'
+        HHXTProperties(model,'Face',1,'Material',fldH,'fDarcy',fmatr_vert);
+        HHXTProperties(model,'Face',2,'Material',fldH,'fDarcy',fmatr_vert);
 end
 
 %% Apply Initial Conditions
@@ -302,12 +327,16 @@ switch split{1}
         C_edge_in = 6; C_edge_out = 5;
     case 'side'
         C_edge_in = 8; C_edge_out = 3;
+    case 'cross'
+        C_edge_in = 3; C_edge_out = 2;
 end
 switch split{2}
     case 'straight'
         H_edge_in = 5; H_edge_out = 6;
     case 'side'
         H_edge_in = 3; H_edge_out = 8;
+    case 'cross'
+        H_edge_in = 1; H_edge_out = 4;
 end
 
 % define BCs based on the choice of flowBC
@@ -359,19 +388,35 @@ end
 %run the steady state solution, 
 results = solveHHXTpde(model); % solve the model
 
+%save specified output file
 if savefile == 1
 save(filename,'model','results');
 end
+%save convergance data
+conv_data = results.ConvStepData;
+save('convergance.mat','conv_data')
 
 %% Calculate effectiveness and ineffectiveness of HX
-m_dot=min(results.Tables{1,1}{:,2});
-C_dot=m_dot*c_cp;
-q_dot=results.Tables{1,1}{1,3};
+%choose cold stream mass flow if C_r is 1
+if C_r == '1'
+    m_dot = results.Tables{1,1}{1,2};
+else
+m_dot = min(results.Tables{1,1}{:,2});
+end
+C_dot = m_dot*c_cp;
+q_dot = results.Tables{1,1}{1,3};
+T_C_in = results.Tables{1,3}{1,4};
+T_H_in = results.Tables{1,4}{1,4};
 eff=q_dot/(C_dot*(T_H_in-T_C_in));
 ineff = 1-eff;
 %outlet temperatures
 T_C_out = results.Tables{1,3}(2,4);
 T_H_out = results.Tables{1,4}(2,4);
+ConvSteps = max(results.ConvStepData(:,1));
+%mass flows
+m_dot_C = results.Tables{1,1}{1,2};
+m_dot_H = results.Tables{1,1}{2,2};
+
 
 %% Display Results
 % View the part of the results object.  The |results.Tables| provide an
@@ -385,11 +430,14 @@ T_H_out = results.Tables{1,4}(2,4);
 %the easiest way to do this is to remove the semicolon at the end of line
 ineff
 eff
-C_r
 alpha
 NTU
-T_H_out
+C_r
 T_C_out
+T_H_out
+m_dot_C
+m_dot_H
+ConvSteps
 
 %% Friction Factor Coefficient Function
 % The microchannel friction factor can only be Reynolds dependent.
