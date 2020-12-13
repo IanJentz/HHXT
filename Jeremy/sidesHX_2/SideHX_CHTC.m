@@ -186,7 +186,7 @@ end
 % refine important elements at the edges only for side headers case
 if alpha ~= 0 && alpha ~= 1
 pin = [1.3 1.2 1.1 1 0.9 0.8];
-for i=1:6
+for i=1:2
     elem_refine = [];
     r_pinball = pin(i)*H_max;
     for VertexID = [1,2,3,4,5,6]
