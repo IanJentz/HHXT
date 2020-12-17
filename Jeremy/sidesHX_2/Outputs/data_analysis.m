@@ -92,6 +92,29 @@ set(gca, 'XScale', 'log')
 axis([1 100 -0.1 0.5])
 saveas(figure(4),['figures','/','NTU for various alpha','.png'],'png');  
 
+
+
+figure;
+for i=1:length(alpha_index)
+    cond = results.alpha == alpha_index(i) & results.C_r == 0.5;
+    ineff = results.ineff(cond);
+    NTU = results.NTU(cond);
+    data = sortrows([NTU ineff],1);
+    plot(data(:,1),data(:,2));
+    hold on
+end
+title('Effect of NTU on Ineffectivness for Various $\alpha$ C_r 0.5','interpreter','latex')
+xlabel('NTU $\left[ - \right]$','interpreter','latex')
+ylabel('Ineffectiveness $\left[ - \right]$','interpreter','latex')
+grid on
+legend(num2str(alpha_index(:)))
+title(legend,'alpha')
+set(gca, 'XScale', 'log')
+axis([1 100 -0.1 0.5])
+saveas(figure(1),['figures','/','NTU for various alpha C_r 0.5','.png'],'png');  
+
+
+
 %% plotting the effect of C_r
 
 %fixed alpha, various NTU
