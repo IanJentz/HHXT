@@ -10,7 +10,7 @@ close all
 %values for which variable C will plotted
 C_r_index = [0.1 0.3 0.5 0.7 1];
 NTU_index = [1.5849 6.3096 25.119 63.096];
-alpha_index = [0.1 0.3 0.7 0.9];
+alpha_index = [0 0.1 0.3 0.7 0.9 1];
 
 %% plotting the effect of Area ratio
 
