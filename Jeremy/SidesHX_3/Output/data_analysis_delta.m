@@ -185,6 +185,7 @@ text(60,0.66,'-- Theory')
 axis([1 100 0.5 1.1])
 legend('Location','southeast')
 title(legend,'C_r')
+set(gca, 'XScale', 'log')
 saveas(figure(7),['figures_eff','/','theory vs matlab counter','.png'],'png');  
 
 
@@ -221,5 +222,6 @@ text(60,0.66,'-- Theory')
 axis([1 100 0.5 1.1])
 legend('Location','southeast')
 title(legend,'C_r')
+set(gca, 'XScale', 'log')
 saveas(figure(8),['figures_eff','/','theory vs matlab cross','.png'],'png');  
 
