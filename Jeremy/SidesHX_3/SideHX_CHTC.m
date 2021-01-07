@@ -146,7 +146,7 @@ model.MatrixOptions = {...
     'Permeability','calculated',... % with permeability calculated from a Darcy friction factor 
     'ResistanceMode','Nusselt', ... % with Thermal resistance to heat transfer defined by a Nusselt number
     'Conductivity','aniso',...      % with anisotropic conductivity in the solid body
-    'FluidConduction','on','Advection','on',... % with both conductive and advective heat transport within the fluid streams
+    'FluidConduction','off','Advection','on',... % with both conductive and advective heat transport within the fluid streams
     'AddaptiveMeshRefinement',{2,'Heating'} }; % add max of 2 steps of Addaptive mesh refinement for Heating (q_dot)
                                                % elements with > 1 standard deviation of heating in W will be refined     
                                                
@@ -540,7 +540,7 @@ function kmatrix = k316(pos,time,temp)
     % each column of the conductivity matrix is of the form [k_x ; 0 ; 0 ; k_y] 
     % function must return as many columns as there are positions input
     [~,nc] = size(pos); % get number of columns required
-    k = 17.6; % 316H at 250 C
+    k = 0; %17.6; % 316H at 250 C
     % the microchannel structure is less conductive than if it were a
     % voidless solid.  The channels are directionally etched and thus
     % conduction is favored in the x direction
