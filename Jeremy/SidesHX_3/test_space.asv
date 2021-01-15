@@ -20,4 +20,4 @@ for i = 1:11
     end
 end
 space = [linspace(1,length(space),length(space))' space];
-csvwrite('input_data_short.txt',space)
+csvwrite('input_data.txt',space)
