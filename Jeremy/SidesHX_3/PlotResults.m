@@ -1,6 +1,7 @@
 function fig1 = PlotResults(filename,dir_plot,breakpoints)
 
 sfigfile = false;
+spdffile = false;
 
 if nargin == 1
     breakpoints = false;
@@ -58,7 +59,7 @@ fig1.OuterPosition = [2,3,3.34,5.45];
 fig1.PaperSize = fig1.OuterPosition([end-1,end]);
 if sfigfile == true; saveas(fig1,[dir_plot,'/figs/Convergence.fig'],'fig'); end
 saveas(fig1,[dir_plot,'/figs/Convergence_334x545.png'],'png');  
-saveas(fig1,[dir_plot,'/figs/Convergence_334x545.pdf'],'pdf');
+if spdffile == true; saveas(fig1,[dir_plot,'/figs/Convergence_334x545.pdf'],'pdf'); end
     
 if breakpoints == true
 disp('....press F5 to continue')
@@ -85,7 +86,7 @@ saveas(fig1,[dir_plot,'/figs/Temps_685x750.pdf'],'pdf');
 fig1.OuterPosition = [2,3,3.34,4];
 fig1.PaperSize = fig1.OuterPosition([end-1,end]);
 saveas(fig1,[dir_plot,'/figs/Temps_334x400.png'],'png'); 
-saveas(fig1,[dir_plot,'/figs/Temps_334x400.pdf'],'pdf');
+if spdffile == true; saveas(fig1,[dir_plot,'/figs/Temps_334x400.pdf'],'pdf'); end
 
 if breakpoints == true
 disp('....press F5 to continue')
@@ -109,7 +110,7 @@ saveas(fig1,[dir_plot,'/figs/Heating_685x540.pdf'],'pdf');
 fig1.OuterPosition = [2,3,3.34,3];
 fig1.PaperSize = fig1.OuterPosition([end-1,end]);
 saveas(fig1,[dir_plot,'/figs/Heating_334x300.png'],'png');  
-saveas(fig1,[dir_plot,'/figs/Heating_334x300.pdf'],'pdf');
+if spdffile == true; saveas(fig1,[dir_plot,'/figs/Heating_334x300.pdf'],'pdf'); end
 
 if breakpoints == true
 disp('....press F5 to continue')
@@ -129,51 +130,53 @@ saveas(fig1,[dir_plot,'/figs/FluidTemps_685x500.pdf'],'pdf');
 fig1.OuterPosition = [2,3,3.34,3];
 fig1.PaperSize = fig1.OuterPosition([end-1,end]);
 saveas(fig1,[dir_plot,'/figs/FluidTemps_334x300.png'],'png'); 
-saveas(fig1,[dir_plot,'/figs/FluidTemps_334x300.pdf'],'pdf');
+if spdffile == true; saveas(fig1,[dir_plot,'/figs/FluidTemps_334x300.pdf'],'pdf'); end
 
 if breakpoints == true
 disp('....press F5 to continue')
 keyboard %programatically inserts a breakpoint, comment this out if you don't want breakpoints
 end
 
-% plot pressure and velocity vectors
-Plot1.updatePlot('Press+ChannelVelocityVector','Wireframe','on','pdeplotArgs',{'AutoScaleFactor',2,'Color','magenta'});
-fig1.OuterPosition = [2,3,6.85,5.6];
-fig1.PaperSize = fig1.OuterPosition([end-1,end]);
-fig1.Children(6).Title.String = replace(fig1.Children(6).Title.String,'Fluid 1','Cold CO$_2$');
-fig1.Children(4).Title.String = replace(fig1.Children(4).Title.String,'Fluid 2','Hot CO$_2$');
-figure(fig1)
-if sfigfile == true;  saveas(fig1,[dir_plot,'/figs/VelocityVectors.fig'],'fig'); end
-saveas(fig1,[dir_plot,'/figs/VelocityVectors_685x560.png'],'png'); 
-saveas(fig1,[dir_plot,'/figs/VelocityVectors_685x560.pdf'],'pdf');
-fig1.OuterPosition = [2,3,3.34,3.6];
-fig1.PaperSize = fig1.OuterPosition([end-1,end]);
-saveas(fig1,[dir_plot,'/figs/VelocityVectors_334x360.png'],'png'); 
-saveas(fig1,[dir_plot,'/figs/VelocityVectors_334x360.pdf'],'pdf');
-
-if breakpoints == true
-disp('....press F5 to continue')
-keyboard %programatically inserts a breakpoint, comment this out if you don't want breakpoints
-end
-
-%plot the solid body temperature
-Plot1.updatePlot('BodyTemperature','Mesh','on','TempLimits',[T_C_in,T_H_in]);
-fig1.OuterPosition = [2,3,6.85,3.3];
-fig1.PaperSize = fig1.OuterPosition([end-1,end]);
-fig1.Children(3).Title.String = replace(fig1.Children(3).Title.String,'Body','Recuperator Body');
-figure(fig1)
-if sfigfile == true;  saveas(fig1,[dir_plot,'/figs/BodyTemp.fig'],'fig'); end
-saveas(fig1,[dir_plot,'/figs/BodyTemp_685x330.png'],'png'); 
-saveas(fig1,[dir_plot,'/figs/BodyTemp_685x330.pdf'],'pdf');
-fig1.OuterPosition = [2,3,3.34,2.3];
-fig1.PaperSize = fig1.OuterPosition([end-1,end]);
-saveas(fig1,[dir_plot,'/figs/BodyTemp_334x230.png'],'png'); 
-saveas(fig1,[dir_plot,'/figs/BodyTemp_334x230.pdf'],'pdf');
-
-
-if breakpoints == true
-disp('....press F5 to continue')
-keyboard %programatically inserts a breakpoint, comment this out if you don't want breakpoints
-end
+% % plot pressure and velocity vectors
+% Plot1.updatePlot('Press+ChannelVelocityVector','Wireframe','on','pdeplotArgs',{'AutoScaleFactor',2,'Color','magenta'});
+% fig1.OuterPosition = [2,3,6.85,5.6];
+% fig1.PaperSize = fig1.OuterPosition([end-1,end]);
+% fig1.Children(6).Title.String = replace(fig1.Children(6).Title.String,'Fluid 1','Cold CO$_2$');
+% fig1.Children(4).Title.String = replace(fig1.Children(4).Title.String,'Fluid 2','Hot CO$_2$');
+% figure(fig1)
+% if sfigfile == true;  saveas(fig1,[dir_plot,'/figs/VelocityVectors.fig'],'fig'); end
+% saveas(fig1,[dir_plot,'/figs/VelocityVectors_685x560.png'],'png'); 
+% saveas(fig1,[dir_plot,'/figs/VelocityVectors_685x560.pdf'],'pdf');
+% fig1.OuterPosition = [2,3,3.34,3.6];
+% fig1.PaperSize = fig1.OuterPosition([end-1,end]);
+% saveas(fig1,[dir_plot,'/figs/VelocityVectors_334x360.png'],'png'); 
+% if spdffile == true;
+% saveas(fig1,[dir_plot,'/figs/VelocityVectors_334x360.pdf'],'pdf'); end
+% 
+% if breakpoints == true
+% disp('....press F5 to continue')
+% keyboard %programatically inserts a breakpoint, comment this out if you don't want breakpoints
+% end
+% 
+% %plot the solid body temperature
+% Plot1.updatePlot('BodyTemperature','Mesh','on','TempLimits',[T_C_in,T_H_in]);
+% fig1.OuterPosition = [2,3,6.85,3.3];
+% fig1.PaperSize = fig1.OuterPosition([end-1,end]);
+% fig1.Children(3).Title.String = replace(fig1.Children(3).Title.String,'Body','Recuperator Body');
+% figure(fig1)
+% if sfigfile == true;  saveas(fig1,[dir_plot,'/figs/BodyTemp.fig'],'fig'); end
+% saveas(fig1,[dir_plot,'/figs/BodyTemp_685x330.png'],'png'); 
+% saveas(fig1,[dir_plot,'/figs/BodyTemp_685x330.pdf'],'pdf');
+% fig1.OuterPosition = [2,3,3.34,2.3];
+% fig1.PaperSize = fig1.OuterPosition([end-1,end]);
+% saveas(fig1,[dir_plot,'/figs/BodyTemp_334x230.png'],'png'); 
+% if spdffile == true;
+% saveas(fig1,[dir_plot,'/figs/BodyTemp_334x230.pdf'],'pdf'); end
+% 
+% 
+% if breakpoints == true
+% disp('....press F5 to continue')
+% keyboard %programatically inserts a breakpoint, comment this out if you don't want breakpoints
+% end
 
 end
