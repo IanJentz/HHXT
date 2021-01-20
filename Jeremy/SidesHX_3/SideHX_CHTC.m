@@ -409,6 +409,10 @@ end
 conv_data = results.ConvStepData;
 save(['convergence_',num2str(run,'%04i'),'.mat'],'conv_data')
 
+% dir_plotting = [cd,'\figures'];
+% PlotResults(filename,dir_plotting,breakpoints);
+
+
 %% Calculate effectiveness and ineffectiveness of HX
 %choose cold stream mass flow if C_r is 1
 if C_r == '1'
