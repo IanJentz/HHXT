@@ -76,13 +76,13 @@ fig1 = gcf; fig1.Units = 'inches'; fig1.RendererMode = 'manual'; fig1.Renderer =
 Plot1.updatePlot('Temperatures','Wireframe','on','TempLimits',[T_C_in,T_H_in]);
 fig1.OuterPosition = [2,3,6.85,7.5];
 fig1.PaperSize = fig1.OuterPosition([end-1,end]);
-fig1.Children(9).Title.String = replace(fig1.Children(9).Title.String,'Body','Recuperator Body');
-fig1.Children(7).Title.String = replace(fig1.Children(7).Title.String,'Fluid 1','Cold CO$_2$');
-fig1.Children(5).Title.String = replace(fig1.Children(5).Title.String,'Fluid 2','Hot CO$_2$');
+%fig1.Children(9).Title.String = replace(fig1.Children(9).Title.String,'Body','Recuperator Body');
+%fig1.Children(7).Title.String = replace(fig1.Children(7).Title.String,'Fluid 1','Cold CO$_2$');
+%fig1.Children(5).Title.String = replace(fig1.Children(5).Title.String,'Fluid 2','Hot CO$_2$');
 figure(fig1)
 if sfigfile == true; saveas(fig1,[dir_plot,'/figs/Temps.fig'],'fig'); end
 saveas(fig1,[dir_plot,'/figs/Temps_685x750.png'],'png'); 
-saveas(fig1,[dir_plot,'/figs/Temps_685x750.pdf'],'pdf');
+if spdffile == true;  saveas(fig1,[dir_plot,'/figs/Temps_685x750.pdf'],'pdf'); end
 fig1.OuterPosition = [2,3,3.34,4];
 fig1.PaperSize = fig1.OuterPosition([end-1,end]);
 saveas(fig1,[dir_plot,'/figs/Temps_334x400.png'],'png'); 
@@ -101,12 +101,12 @@ Cfact = model.Mesh.MaxElementSize/0.01;
 % Plot1.updatePlot('FluidHeating','Wireframe','on','CLimits',Cfact*max(max(abs(results.StreamVolHeating)))*[-1,1]);
 fig1.OuterPosition = [2,3,6.85,5.4];
 fig1.PaperSize = fig1.OuterPosition([end-1,end]);
-fig1.Children(6).Title.String = replace(fig1.Children(6).Title.String,'Fluid 1','Cold CO$_2$');
-fig1.Children(4).Title.String = replace(fig1.Children(4).Title.String,'Fluid 2','Hot CO$_2$');
+%fig1.Children(6).Title.String = replace(fig1.Children(6).Title.String,'Fluid 1','Cold CO$_2$');
+%fig1.Children(4).Title.String = replace(fig1.Children(4).Title.String,'Fluid 2','Hot CO$_2$');
 figure(fig1)
 if sfigfile == true; saveas(fig1,[dir_plot,'/figs/Heating.fig'],'fig'); end
 saveas(fig1,[dir_plot,'/figs/Heating_685x540.png'],'png');  
-saveas(fig1,[dir_plot,'/figs/Heating_685x540.pdf'],'pdf');
+if spdffile == true; saveas(fig1,[dir_plot,'/figs/Heating_685x540.pdf'],'pdf'); end
 fig1.OuterPosition = [2,3,3.34,3];
 fig1.PaperSize = fig1.OuterPosition([end-1,end]);
 saveas(fig1,[dir_plot,'/figs/Heating_334x300.png'],'png');  
@@ -121,12 +121,12 @@ end
 Plot1.updatePlot('FluidTemperatures','Wireframe','on','TempLimits',[T_C_in,T_H_in]);
 fig1.OuterPosition = [2,3,6.85,5];
 fig1.PaperSize = fig1.OuterPosition([end-1,end]);
-fig1.Children(6).Title.String = replace(fig1.Children(6).Title.String,'Fluid 1','Cold CO$_2$');
-fig1.Children(4).Title.String = replace(fig1.Children(4).Title.String,'Fluid 2','Hot CO$_2$');
+%fig1.Children(6).Title.String = replace(fig1.Children(6).Title.String,'Fluid 1','Cold CO$_2$');
+%fig1.Children(4).Title.String = replace(fig1.Children(4).Title.String,'Fluid 2','Hot CO$_2$');
 figure(fig1)
 if sfigfile == true; saveas(fig1,[dir_plot,'/figs/FluidTemps.fig'],'fig'); end
 saveas(fig1,[dir_plot,'/figs/FluidTemps_685x500.png'],'png'); 
-saveas(fig1,[dir_plot,'/figs/FluidTemps_685x500.pdf'],'pdf');
+if spdffile == true; saveas(fig1,[dir_plot,'/figs/FluidTemps_685x500.pdf'],'pdf'); end
 fig1.OuterPosition = [2,3,3.34,3];
 fig1.PaperSize = fig1.OuterPosition([end-1,end]);
 saveas(fig1,[dir_plot,'/figs/FluidTemps_334x300.png'],'png'); 

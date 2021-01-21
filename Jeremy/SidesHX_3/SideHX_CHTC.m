@@ -163,7 +163,7 @@ model.SolverOptions.AbsoluteTolerance = 1e0;
 % Define the geometry of the HX using the |Geom_SideHeaders()| function.
 % This will result in a geometry with 3 Faces/Regions
 
-G = Geom_SideHeaders(model,L,W,W_head);
+G = Geom_SideHeaders(model,L,W,W_head,alpha);
 model.setThickness(H);  % set the 2D thickness (if not set the default will be 1 m thick!)
 
 %% Mesh the problem
@@ -176,6 +176,10 @@ model.setThickness(H);  % set the 2D thickness (if not set the default will be 1
 
 % generate a mesh of linear tets
 generateMesh(model,'Hmax',H_max,'GeometricOrder','linear');
+%plot for sanity if needed
+%figure()
+%pdegplot(model,'CellLabels','on','EdgeLabels','on','FaceLabels','on','FaceAlpha',0.5,'VertexLabels','on');
+
 
 %% Refine the mesh
 % calling refineHHXTmesh with a single integer or row of integers
@@ -183,12 +187,13 @@ generateMesh(model,'Hmax',H_max,'GeometricOrder','linear');
 % model = refineHHXTmesh(model,[2,3]);
 if true
 if alpha == 1   %pure crossflow
-    model = refineHHXTmesh(model,[1,2]);
+    model = refineHHXTmesh(model,[1]);
 elseif alpha == 0   %pure counterflow
     model = refineHHXTmesh(model,[1,2,3]);    
 else
-    model = refineHHXTmesh(model,[2,3]);
+    model = refineHHXTmesh(model,[1,2,3]);
 end
+
 % refine important elements at the edges only for side headers case
 if alpha ~= 0 && alpha ~= 1
 pin = [1.3 1.2 1.1 1 0.9 0.8];
@@ -210,6 +215,10 @@ for i=1:2
 end
 end
 end
+%plot mesh for sanity
+%figure()
+%pdeplot(model,'FaceAlpha',0.5);  %plot the mesh using the pde toolbox's pdeplot function
+
 %% Material Region Definitions
 % Define the behavior of the HHXT model using the |HHXTProperties()|
 % function.  This sets the homogenized properties of the HX for each region
@@ -225,8 +234,8 @@ sld1 = HHXTProperties(model,'Face',1,'Stream',0,...
                         'SpecificHeat',502);        %heat capacity in J/kg-K
 % the definition applied to Face 1 can be copied to Faces 2 and 3 by
 % passing the HHXTMaterialAssignment object sld1
-HHXTProperties(model,'Face',2,'Material',sld1);
 if alpha ~= 1
+HHXTProperties(model,'Face',2,'Material',sld1);
 HHXTProperties(model,'Face',3,'Material',sld1);    
 end
 
@@ -274,8 +283,10 @@ fldH = HHXTProperties(model,'Face',1,'Stream',2,...
                         'SpecificHeat',c_cp,...      %heat capacity in J/kg-K
                    'HydraulicDiameter',D_h,...      %hydraulic diameter in m
                            'Viscosity',c_mu,...      %viscosity in kg/m-s
-                             'Nusselt',Nu_H,...
-                              'fDarcy',fmatr_horz);
+                           'Nusselt',Nu_H,...
+                           'fDarcy',fmatr_horz);
+                       
+                       
 
 % specifiy the header turn regions based on flow config
 % the definitions applied to Face 1 can be copied to Faces 2 and 3 by
@@ -295,7 +306,7 @@ switch split{1}
         HHXTProperties(model,'Face',2,'Material',fldC,'fDarcy',fmatr_vert);
         HHXTProperties(model,'Face',3,'Material',fldC,'fDarcy',fmatr_vert);
     case 'cross'
-        HHXTProperties(model,'Face',2,'Material',fldC);
+        HHXTProperties(model,'Face',1,'Material',fldC,'fDarcy',fmatr_vert);
         
 end
 switch split{2}
@@ -307,9 +318,6 @@ switch split{2}
         % see above comment on copying and modifying HHXTMaterialAssignment objects
         HHXTProperties(model,'Face',2,'Material',fldH,'fDarcy',fmatr_vert);
         HHXTProperties(model,'Face',3,'Material',fldH,'fDarcy',fmatr_vert);
-    case 'cross'
-        HHXTProperties(model,'Face',1,'Material',fldH,'fDarcy',fmatr_vert);
-        HHXTProperties(model,'Face',2,'Material',fldH,'fDarcy',fmatr_vert);
 end
 
 %% Apply Initial Conditions
@@ -334,7 +342,7 @@ switch split{1}
     case 'side'
         C_edge_in = 8; C_edge_out = 3;
     case 'cross'
-        C_edge_in = 3; C_edge_out = 2;
+        C_edge_in = 1; C_edge_out = 3;
 end
 switch split{2}
     case 'straight'
@@ -342,7 +350,7 @@ switch split{2}
     case 'side'
         H_edge_in = 3; H_edge_out = 8;
     case 'cross'
-        H_edge_in = 1; H_edge_out = 4;
+        H_edge_in = 2; H_edge_out = 4;
 end
 
 % define BCs based on the choice of flowBC
@@ -409,7 +417,7 @@ end
 conv_data = results.ConvStepData;
 save(['convergence_',num2str(run,'%04i'),'.mat'],'conv_data')
 
-% dir_plotting = [cd,'\figures'];
+% dir_plot = [cd,'\figures'];
 % PlotResults(filename,dir_plotting,breakpoints);
 
 

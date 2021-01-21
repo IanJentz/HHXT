@@ -8,7 +8,7 @@ close all
 %e.g. plot ineff (X) as a function of alpha (A) for 3 values of C_r (C)
 %with NTU (B) fixed at 5
 %values for which variable C will plotted
-NTU_index = [1.5849 6.3096 25.119 39.8110 63.096];
+NTU_index = [1.5849 6.3096 25.119 63.096];
 alpha_index = [0.1 0.2 0.3 0.4];
 C_r = 0.9;
 
@@ -17,6 +17,7 @@ C_r = 0.9;
 figure(1);
 figure(2);
 h = [];
+color = char('r','b','g','m','y');
 for i=1:length(NTU_index)
     %plot ineff
     cond = results.NTU == NTU_index(i) & results.C_r == C_r;
@@ -73,14 +74,14 @@ for i=1:length(alpha_index)
     ineff = results.ineff(row);
     NTU = results.NTU(row);
     data = sortrows([NTU ineff],1);
-    fit_NTU = fit(data(:,1),data(:,2),'power2');
+    fit_NTU = fit(data(:,1),data(:,2),'power2','Exclude',data(:,1)>70);
     figure(3);
-    h(i) = plot(data(:,1),data(:,2),'*');
+    h(i) = plot(data(:,1),data(:,2),strcat('*',color(i)));
     hold on
-    plot(fit_NTU)
+    plot(fit_NTU,strcat('-',color(i)))
     %plot eff-loss
-    data = [];
     data_th =[];
+    NTU = logspace(0,2,20);
     for j=1:length(NTU)
         if C_r == 1
             eff_th = NTU(j)/(1+NTU(j));
@@ -91,18 +92,28 @@ for i=1:length(alpha_index)
     end
     eff = 1-fit_NTU(NTU);
     DELTAeff = data_th-eff;
-    data = sortrows([NTU DELTAeff],1);
     figure(4);
-    plot(data(:,1),data(:,2));
+    plot(NTU,DELTAeff);
     hold on
 end
 figure(3);
+%plot theoritical counter-flow
+h(5) = plot(NTU,1-data_th,'-');
+hold on
+%plot theoritical cross-flow
+ineff_cross = [];
+for i=1:length(NTU)
+        eff = 1-exp(NTU(i)^(0.22)/C_r*(exp(-C_r*NTU(i)^(0.78))-1));
+        ineff_cross = [ineff_cross; 1-eff];
+end
+h(6) = plot(NTU,ineff_cross,'-');
+%formatting
 title('Effect of NTU on Ineffectivness for Various $\alpha$ ($C_r$=0.9)','interpreter','latex')
 xlabel('NTU $\left[ - \right]$','interpreter','latex')
 ylabel('Ineffectiveness $\left[ - \right]$','interpreter','latex')
 grid on
 title(legend,'alpha')
-legend(h,'0.1','0.2','0.3','0.4')
+legend(h,'0.1','0.2','0.3','0.4','Counter-flow thoery','Cross-flow thoery')
 set(gca, 'XScale', 'log')
 axis([1 70 -0.1 0.5])
 saveas(figure(3),['figures_fit','/','ineff as function of NTU C_r 0.9','.png'],'png');  
@@ -114,6 +125,6 @@ grid on
 legend(num2str(alpha_index(:)),'Location','northwest')
 title(legend,'alpha')
 set(gca, 'XScale', 'log')
-axis([1 70 -0.01 0.05])
+axis([1 100 -0.01 0.05])
 saveas(figure(4),['figures_fit','/','eff loss as function of NTU C_r 0.9','.png'],'png');  
 
