@@ -1,0 +1,9 @@
+%% Heat Transfer Coefficient Functions
+% The microchannel heat transfer coefficient can be dependent on position,
+% time, Reynolds number, and Prandtl number.
+% Functional deifinitions must accept the following inputs (pos,time,Re,Pr)
+% Where pos is a structure containing arrays of coordinates pos [x;y]
+% And where time, Re, and Pr are arrays of time in sec,
+% Reynolds number, and Prandtl number.
+% Note the here the Re is the Reynolds magnitude, i.e. magnitude of the
+% vector of directional Reynolds numbers [Re_x,Re_y].

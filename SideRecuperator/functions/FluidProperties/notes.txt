@@ -1,0 +1,7 @@
+%% RealGas Fluid Properties: Varying Pressure and Temperature
+% Properties of the fluids, streams 1 & 2, can be dependent on position,
+% time, temperature, and pressure.  
+% Functional definitions must accept the inputs (pos,time,temp,press)
+% Where pos is a structure containing arrays of coordinates pos [x;y].
+% And where time, temp, and press are arrays of time in sec,
+% temperature in C, and pressure in Pa.

@@ -1,0 +1,4 @@
+%% Friction Factor Coefficient Function
+% The microchannel friction factor can only be Reynolds dependent.
+% Functional deifinitinos must accept the input (Re)
+% Where Re is an array of Reynolds numbers
